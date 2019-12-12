@@ -13,6 +13,7 @@ function validateId(req, res, next) {
     .first()
     .then(car => {
       if (car) {
+        console.log(car);
         req.car = car;
         next();
       } else {
@@ -39,11 +40,27 @@ router.get(`/:id`, validateId, (req, res) => {
 });
 
 // add new car
-router.post(`/`, (req, res) => {});
+router.post(`/`, (req, res) => {
+  const data = req.body;
+  if (data.vin && data.make && data.model && data.mileage) {
+    knex(`cars`)
+      .insert(data)
+      .then(count => {
+        res.status(200).json({ message: `car id ${count} added` });
+      })
+      .catch(error =>
+        res.status(500).json({ errorMessage: `Unable to update account` })
+      );
+  } else {
+    res.status(400).json({
+      errorMessage: `Body must contain at least one of the following: vin, make, model, mileage, transmission, title_status`
+    });
+  }
+});
 
 // update car by id
 router.put(`/:id`, validateId, (req, res) => {
-  const id = res.car.id;
+  const id = req.car.id;
   const data = req.body;
 
   if (
